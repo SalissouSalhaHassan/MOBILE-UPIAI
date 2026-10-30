@@ -30,7 +30,7 @@ echo [3/4] Verification de l'environnement Android/Gradle...
 
 echo.
 echo [4/4] Compilation du fichier APK Release pour UP/IAI...
-call %FLUTTER_EXE% build apk --release --no-tree-shake-icons --dart-define=EDUT_WEB_API_BASE_URL=https://web-group-upiai.vercel.app --dart-define=SUPABASE_URL=https://scogaxcodsigxistzcnt.supabase.co --dart-define=SUPABASE_ANON_KEY=sb_publishable_CqeNp-TJJBjeTuSS5fsj5g_KvZGfryb
+call %FLUTTER_EXE% build apk --release --no-tree-shake-icons --dart-define=EDUT_WEB_API_BASE_URL=https://web-upiai.vercel.app --dart-define=SUPABASE_URL=https://scogaxcodsigxistzcnt.supabase.co --dart-define=SUPABASE_ANON_KEY=sb_publishable_CqeNp-TJJBjeTuSS5fsj5g_KvZGfryb
 if errorlevel 1 (
     echo.
     echo ===================================================================

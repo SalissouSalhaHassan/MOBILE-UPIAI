@@ -37,11 +37,11 @@ class _ServerConfigDialogState extends State<ServerConfigDialog> {
 
   final List<Map<String, dynamic>> _presets = [
     {
-      'label': 'Production Principale (GROUP-UPIAI)',
-      'url': 'https://web-group-upiai.vercel.app',
+      'label': 'Production Principale (UP/IAI)',
+      'url': 'https://web-upiai.vercel.app',
       'tag': 'Live Prod',
       'badgeColor': const Color(0xFF10B981),
-      'description': 'Serveur Vercel officiel actif (GROUP-UPIAI)',
+      'description': 'Serveur Vercel officiel actif (UP/IAI)',
     },
     {
       'label': 'Serveur Web Standard (Edut-Web)',
@@ -488,7 +488,7 @@ class _ServerConfigDialogState extends State<ServerConfigDialog> {
                     color: Color(0xFF0F172A),
                   ),
                   decoration: InputDecoration(
-                    hintText: 'ex: web-group-upiai.vercel.app',
+                    hintText: 'ex: web-upiai.vercel.app',
                     hintStyle: const TextStyle(
                       fontSize: 12.5,
                       color: Color(0xFF94A3B8),

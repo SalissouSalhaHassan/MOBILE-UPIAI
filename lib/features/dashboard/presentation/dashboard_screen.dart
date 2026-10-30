@@ -2194,7 +2194,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   title: const Text("Serveur Cloud Officiel"),
                   subtitle: const Text(
-                    "web-group-upiai.vercel.app (GROUP-UPIAI)",
+                    "web-upiai.vercel.app (UP/IAI)",
                     style: TextStyle(
                       fontSize: 11,
                       color: Color(0xFF059669),
