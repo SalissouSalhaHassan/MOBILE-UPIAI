@@ -526,7 +526,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         // Title & Subtitle
                         const Center(
                           child: Text(
-                            'GROUP-UPIAI',
+                            'UP/IAI',
                             style: TextStyle(
                               fontSize: 25,
                               fontWeight: FontWeight.w900,
@@ -545,7 +545,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               border: Border.all(color: const Color(0xFFC7D2FE)),
                             ),
                             child: const Text(
-                              'Complexe d\'Enseignement Secondaire UPIAI - Maradi',
+                              'Université Privée Internationale Aboubacar Ibrahim',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,

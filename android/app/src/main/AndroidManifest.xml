@@ -11,7 +11,7 @@
         android:maxSdkVersion="32" />
 
     <application
-        android:label="GROUP-UPIAI"
+        android:label="UP/IAI"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
