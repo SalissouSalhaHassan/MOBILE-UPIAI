@@ -60,7 +60,7 @@ class _SmartBoursesEcheanciersScreenState
       _schoolId = int.tryParse(sIdStr ?? '9') ?? 9;
 
       final results = await Future.wait([
-        _financeRepo.getBoursesAndEcheanciersDashboard(),
+        _financeRepo.getBoursesAndEcheanciersDashboard(schoolId: _schoolId),
         _financeRepo.getDocumentHeader(_schoolId).catchError((_) => {'success': false}),
       ]);
 
