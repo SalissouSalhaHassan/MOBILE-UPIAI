@@ -21,7 +21,7 @@ Write-Host "`n[2/3] Verification de l'environnement..." -ForegroundColor Green
 
 Write-Host "`n[3/3] Batissage du fichier app-release.apk pour GROUP-UPIAI..." -ForegroundColor Green
 & $flutterCmd build apk --release --no-tree-shake-icons `
-    --dart-define=EDUT_WEB_API_BASE_URL=https://web-group-upiai.vercel.app `
+    --dart-define=EDUT_WEB_API_BASE_URL=https://web-upiai.vercel.app `
     --dart-define=SUPABASE_URL=https://scogaxcodsigxistzcnt.supabase.co `
     --dart-define=SUPABASE_ANON_KEY=sb_publishable_CqeNp-TJJBjeTuSS5fsj5g_KvZGfryb
 
