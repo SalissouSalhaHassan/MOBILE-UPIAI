@@ -134,6 +134,149 @@ class _TeacherAttendanceScreenState extends State<TeacherAttendanceScreen> {
     );
   }
 
+  Future<void> _showDirectClassRollCallModal() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+    );
+
+    final employeeIdStr = await locator<SessionManager>().getEmployeeId();
+    final employeeId = int.tryParse(employeeIdStr ?? '') ?? 0;
+
+    final classes = await locator<AttendanceRepository>().getTeacherClassesAndSubjects(employeeId);
+
+    if (mounted) {
+      Navigator.pop(context); // Close loading dialog
+
+      if (classes.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Aucune classe disponible actuellement.")),
+        );
+        return;
+      }
+
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.white,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (context) {
+          String searchQuery = '';
+          return StatefulBuilder(
+            builder: (context, setModalState) {
+              final filteredClasses = classes.where((item) {
+                if (searchQuery.trim().isEmpty) return true;
+                final q = searchQuery.trim().toLowerCase();
+                final className = (item['school_classes']?['class_name'] ?? item['class_name'] ?? '').toString().toLowerCase();
+                final subjectName = (item['school_subjects']?['subject_name'] ?? item['subject_name'] ?? '').toString().toLowerCase();
+                return className.contains(q) || subjectName.contains(q);
+              }).toList();
+
+              return SafeArea(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 44,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: AppColors.slate300,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          "Sélectionner une classe pour l'appel",
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.slate900),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          decoration: InputDecoration(
+                            hintText: "Rechercher une classe...",
+                            hintStyle: const TextStyle(color: AppColors.slate400, fontSize: 13),
+                            prefixIcon: const Icon(Icons.search, color: AppColors.slate400, size: 20),
+                            filled: true,
+                            fillColor: const Color(0xFFF1F5F9),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                          ),
+                          onChanged: (val) => setModalState(() => searchQuery = val),
+                        ),
+                        const SizedBox(height: 12),
+                        ConstrainedBox(
+                          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.45),
+                          child: filteredClasses.isEmpty
+                              ? const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 24),
+                                  child: Center(
+                                    child: Text("Aucune classe correspondante", style: TextStyle(color: AppColors.slate400)),
+                                  ),
+                                )
+                              : ListView.separated(
+                                  shrinkWrap: true,
+                                  itemCount: filteredClasses.length,
+                                  separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                                  itemBuilder: (context, index) {
+                                    final item = filteredClasses[index];
+                                    final classId = (item['class_id'] as num?)?.toInt() ?? 1;
+                                    final className = item['school_classes']?['class_name']?.toString() ??
+                                        item['class_name']?.toString() ?? 'Classe';
+                                    final subjectId = (item['subject_id'] as num?)?.toInt();
+                                    final subjectName = item['school_subjects']?['subject_name']?.toString();
+
+                                    return ListTile(
+                                      leading: CircleAvatar(
+                                        backgroundColor: AppColors.primary.withAlpha(25),
+                                        child: const Icon(Icons.class_rounded, color: AppColors.primary, size: 20),
+                                      ),
+                                      title: Text(className, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                                      subtitle: Text(
+                                        subjectName ?? "Appel de classe",
+                                        style: const TextStyle(fontSize: 12, color: AppColors.slate500),
+                                      ),
+                                      trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.slate400),
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                        context.push(
+                                          '/attendance/student-roll',
+                                          extra: {
+                                            'classId': classId,
+                                            'className': className,
+                                            'subjectId': subjectId,
+                                            'subjectName': subjectName,
+                                            'initialDateStr': DateFormat('yyyy-MM-dd').format(_selectedDate),
+                                          },
+                                        ).then((_) => _fetchAttendanceData());
+                                      },
+                                    );
+                                  },
+                                ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      );
+    }
+  }
+
   void _changeDate(int offset) {
     setState(() {
       if (_filterType == "day") {
@@ -241,7 +384,48 @@ class _TeacherAttendanceScreenState extends State<TeacherAttendanceScreen> {
                 : _errorMessage != null
                     ? _buildErrorState()
                     : _slots.isEmpty
-                        ? const Center(child: Text("Aucun cours programmé sur cette période.", style: TextStyle(color: AppColors.slate500, fontWeight: FontWeight.bold)))
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(28.0),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(20),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary.withAlpha(20),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(Icons.calendar_today_rounded, size: 48, color: AppColors.primary),
+                                  ),
+                                  const SizedBox(height: 18),
+                                  const Text(
+                                    "Aucun créneau programmé",
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.slate900),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    "Vous pouvez faire l'appel libre d'une classe directement sans attendre l'emploi du temps.",
+                                    style: TextStyle(fontSize: 12.5, color: AppColors.slate500),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 20),
+                                  ElevatedButton.icon(
+                                    onPressed: _showDirectClassRollCallModal,
+                                    icon: const Icon(Icons.playlist_add_check_rounded, size: 18),
+                                    label: const Text("Faire l'appel d'une classe", style: TextStyle(fontWeight: FontWeight.bold)),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.primary,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
                         : Column(
                             children: [
                               // Top statistics ring & metrics dashboard
@@ -261,6 +445,16 @@ class _TeacherAttendanceScreenState extends State<TeacherAttendanceScreen> {
                           ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.playlist_add_check_rounded, size: 22),
+        label: const Text(
+          "Faire l'appel",
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+        ),
+        onPressed: _showDirectClassRollCallModal,
       ),
     );
   }

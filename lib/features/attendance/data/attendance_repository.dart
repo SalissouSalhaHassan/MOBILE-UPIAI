@@ -399,10 +399,53 @@ class AttendanceRepository {
         }
       } catch (_) {}
 
-      return cacheManager.getDataList(
+      // Fallback 1: If no specific teacher classes assigned, fetch all active classes of the school
+      try {
+        final allResp = await _apiClient.getJson(
+          '/api/mobile/attendance?action=getAllClassesAndSubjects',
+        );
+        final allList = List<Map<String, dynamic>>.from(allResp['data'] ?? []);
+        if (allList.isNotEmpty) {
+          return allList;
+        }
+      } catch (_) {}
+
+      // Fallback 2: Check local cached class subjects
+      final cachedClasses = cacheManager.getDataList(
         boxName: OfflineStoreManager.boxClassSubjects,
         key: cacheKey,
       );
+      if (cachedClasses.isNotEmpty) return cachedClasses;
+
+      // Fallback 3: Extract distinct classes from cached students
+      final cachedStudents = cacheManager.getDataList(
+        boxName: OfflineStoreManager.boxStudents,
+        key: 'students_list',
+      );
+      if (cachedStudents.isNotEmpty) {
+        final Map<String, Map<String, dynamic>> distinctClasses = {};
+        for (var s in cachedStudents) {
+          final cName = (s['classe'] ?? s['class_name'] ?? s['className'])?.toString().trim();
+          if (cName != null && cName.isNotEmpty && !distinctClasses.containsKey(cName)) {
+            distinctClasses[cName] = {
+              'class_id': s['class_id'] ?? 1,
+              'school_classes': {
+                'class_name': cName,
+                'educational_level': s['educational_level'],
+                'section_name': s['section'],
+              },
+              'school_subjects': {
+                'subject_name': 'Cours Général',
+              },
+            };
+          }
+        }
+        if (distinctClasses.isNotEmpty) {
+          return distinctClasses.values.toList();
+        }
+      }
+
+      return [];
     } catch (e) {
       debugPrint("Error fetching teacher classes and subjects: $e");
       return cacheManager.getDataList(
